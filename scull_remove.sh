@@ -1,4 +1,5 @@
 #!/bin/bash
+
 module="scull_driver"
 device="scull_driver"
 

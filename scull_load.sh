@@ -8,9 +8,9 @@ mode="664"
 
 rm -rf /dev/${device}*
 
-#major=$(awk "\\$2==\"$module\" {print \\$1}" /proc/devices)
+major=$(awk "\$2==\"$module\" {print \$1}" /proc/devices)
 
-mknod /dev/${device} c 246 0
+mknod /dev/${device} c $major 0
 
 group="staff"
 grep -q '^staff:' /etc/group || group="wheel"
