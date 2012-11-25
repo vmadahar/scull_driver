@@ -9,7 +9,12 @@ MODULE_LICENSE("GPL");
 
 #define NUM_OF_DEVICES 1
 
-static int scull_ioctl(struct inode *inode, struct file *filp, unsigned int cmd, unsigned long arg);
+#ifdef HAVE_UNLOCKED_IOCTL
+	static long scull_ioctl(struct file *filp, unsigned int cmd, unsigned long arg);
+#else
+	static int scull_ioctl(struct inode *inode, struct file *filp, unsigned int cmd, unsigned long arg);
+#endif
+
 static int scull_open(struct inode *inode, struct file *filp);
 static int scull_release(struct inode *inode, struct file *filp);
 
@@ -23,7 +28,11 @@ scull_t scull;
 
 struct file_operations scull_fops = {
 	.owner = THIS_MODULE,
+#ifdef HAVE_UNLOCKED_IOCTL
+	.compat_ioctl = scull_ioctl,
+#else
 	.ioctl = scull_ioctl,
+#endif
 	.open = scull_open,
 	.release = scull_release
 };
@@ -48,10 +57,18 @@ static int scull_release(struct inode *inode, struct file *filp)
 }
 
 
+#ifdef HAVE_UNLOCKED_IOCTL
+static long scull_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
+{
+	return 0;
+}
+#else
 static int scull_ioctl(struct inode *inode, struct file *filp, unsigned int cmd, unsigned long arg)
 {
 	return 0;
 }
+#endif
+
 
 
 static int scull_read_proc(char *buf, char **start, off_t offset, int count, int *eof, void *data)
