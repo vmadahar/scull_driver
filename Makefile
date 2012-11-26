@@ -13,5 +13,5 @@ default:
 endif
 	
 clean:
-	rm -rf *.o *~* modules.order Module.symvers  scull_driver.ko  scull_driver.mod.c
+	rm -rf *.o *~* modules.order Module.symvers  scull_driver.ko  scull_driver.mod.c .scull* .tmp*
 
