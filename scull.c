@@ -2,6 +2,7 @@
 #include <linux/module.h>
 #include <linux/fs.h>
 #include <linux/proc_fs.h>
+#include <linux/uaccess.h>
 
 MODULE_LICENSE("GPL");
 
@@ -29,7 +30,7 @@ scull_t scull;
 struct file_operations scull_fops = {
 	.owner = THIS_MODULE,
 #ifdef HAVE_UNLOCKED_IOCTL
-	.compat_ioctl = scull_ioctl,
+	.unlocked_ioctl = scull_ioctl,
 #else
 	.ioctl = scull_ioctl,
 #endif
@@ -49,10 +50,7 @@ static int scull_open(struct inode *inode, struct file *filp)
 
 static int scull_release(struct inode *inode, struct file *filp)
 {
-	scull_t *temp = filp->private_data;
 	printk("scull_close\n");
-	
-	temp->data = -1;
 	return 0;
 }
 
@@ -60,11 +58,59 @@ static int scull_release(struct inode *inode, struct file *filp)
 #ifdef HAVE_UNLOCKED_IOCTL
 static long scull_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
 {
+	int result = 0;
+	scull_t *scull_data = filp->private_data;
+	
+	printk("Going in ioct\n");
+	switch(cmd)
+	{
+		case 1:
+		{
+			int temp = 0;
+			result = __copy_from_user((void*)&temp, (void*)arg, sizeof(int));
+			if (result)
+			{
+				printk("Unable to copy from user\n");
+				return -1;
+			}
+			printk("Setting data to: %u\n", temp);
+			scull_data->data = temp;
+			
+		}break;
+		default:
+		{
+			printk("Error could not find ioctl\n");
+		}
+	}
 	return 0;
 }
 #else
 static int scull_ioctl(struct inode *inode, struct file *filp, unsigned int cmd, unsigned long arg)
 {
+	int result = 0;
+	scull_t *scull_data = filp->private_data;
+	
+	printk("Going in ioct\n");
+	switch(cmd)
+	{
+		case 1:
+		{
+			int temp = 0;
+			result = __copy_from_user((void*)&temp, (void*)arg, sizeof(int));
+			if (result)
+			{
+				printk("Unable to copy from user\n");
+				return -1;
+			}
+			printk("Setting data to: %u\n", temp);
+			scull_data->data = temp;
+			
+		}break;
+		default:
+		{
+			printk("Error could not find ioctl\n");
+		}
+	}
 	return 0;
 }
 #endif
