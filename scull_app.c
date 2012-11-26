@@ -4,9 +4,12 @@
 #include <unistd.h>		/* exit */
 #include <sys/ioctl.h>		/* ioctl */
 
+#include "scull_magic.h"
+
 int main()
 {
 	int file_desc = -1;
+	int err = 0;
 	
 	file_desc = open("/dev/scull_driver", O_RDWR);
 	if (file_desc < 0)
@@ -17,7 +20,16 @@ int main()
 	
 	int temp = 7;
 	
-	ioctl(file_desc, 1, &temp);
+	err = ioctl(file_desc, SCULL_WRITE_DATA, &temp);
+	if (err)
+		printf("Error trying to write data\n");
+	
+	err = ioctl(file_desc, SCULL_READ_DATA, &temp);
+	if (err)
+		printf("Error trying to read data\n");
+	
+	printf("Read data from the scull driver: %u\n", temp);	
+	
 	
 	close(file_desc);
 	

@@ -4,6 +4,8 @@
 #include <linux/proc_fs.h>
 #include <linux/uaccess.h>
 
+#include "scull_magic.h"
+
 MODULE_LICENSE("GPL");
 
 #define SCULL_DEVICE_NAME "scull_driver"
@@ -64,7 +66,7 @@ static long scull_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
 	printk("Going in ioct\n");
 	switch(cmd)
 	{
-		case 1:
+		case SCULL_WRITE_DATA:
 		{
 			int temp = 0;
 			result = __copy_from_user((void*)&temp, (void*)arg, sizeof(int));
@@ -73,15 +75,26 @@ static long scull_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
 				printk("Unable to copy from user\n");
 				return -1;
 			}
-			printk("Setting data to: %u\n", temp);
+			printk("Writing data to: %u\n", temp);
 			scull_data->data = temp;
 			
+		}break;
+		case SCULL_READ_DATA:
+		{
+			result = __copy_to_user((void*)arg, &scull_data->data, sizeof(int));
+			if (result)
+			{
+				printk("Unable to copy to user\n");
+				return -1;
+			}
+			printk("Reading data to: %u\n", scull_data->data);
 		}break;
 		default:
 		{
 			printk("Error could not find ioctl\n");
 		}
 	}
+	
 	return 0;
 }
 #else
@@ -93,7 +106,7 @@ static int scull_ioctl(struct inode *inode, struct file *filp, unsigned int cmd,
 	printk("Going in ioct\n");
 	switch(cmd)
 	{
-		case 1:
+		case SCULL_WRITE_DATA:
 		{
 			int temp = 0;
 			result = __copy_from_user((void*)&temp, (void*)arg, sizeof(int));
@@ -102,15 +115,26 @@ static int scull_ioctl(struct inode *inode, struct file *filp, unsigned int cmd,
 				printk("Unable to copy from user\n");
 				return -1;
 			}
-			printk("Setting data to: %u\n", temp);
+			printk("Writing data to: %u\n", temp);
 			scull_data->data = temp;
 			
+		}break;
+		case SCULL_READ_DATA:
+		{
+			result = __copy_to_user((void*)arg, &scull_data->data, sizeof(int));
+			if (result)
+			{
+				printk("Unable to copy to user\n");
+				return -1;
+			}
+			printk("Reading data to: %u\n", scull_data->data);
 		}break;
 		default:
 		{
 			printk("Error could not find ioctl\n");
 		}
 	}
+	
 	return 0;
 }
 #endif
