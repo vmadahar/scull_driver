@@ -3,10 +3,12 @@
 #include <linux/fs.h>
 #include <linux/proc_fs.h>
 #include <linux/uaccess.h>
+#include <linux/mutex.h>
 
 #include "scull_magic.h"
 
 MODULE_LICENSE("GPL");
+MODULE_AUTHOR("Varun Madahar");
 
 #define SCULL_DEVICE_NAME "scull_driver"
 
@@ -21,6 +23,8 @@ MODULE_LICENSE("GPL");
 static int scull_open(struct inode *inode, struct file *filp);
 static int scull_release(struct inode *inode, struct file *filp);
 
+/* Scull Mutex lock */
+static DEFINE_MUTEX(scull_lock);
 
 typedef struct scull_s
 {
@@ -64,6 +68,10 @@ static long scull_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
 	scull_t *scull_data = filp->private_data;
 	
 	printk("Going in ioct\n");
+	
+	if (mutex_lock_interruptible(&scull_lock))
+        return -ERESTARTSYS;
+    
 	switch(cmd)
 	{
 		case SCULL_WRITE_DATA:
@@ -73,6 +81,7 @@ static long scull_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
 			if (result)
 			{
 				printk("Unable to copy from user\n");
+				mutex_unlock(&scull_lock);
 				return -1;
 			}
 			printk("Writing data to: %u\n", temp);
@@ -85,6 +94,7 @@ static long scull_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
 			if (result)
 			{
 				printk("Unable to copy to user\n");
+				mutex_unlock(&scull_lock);
 				return -1;
 			}
 			printk("Reading data to: %u\n", scull_data->data);
@@ -95,6 +105,7 @@ static long scull_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
 		}
 	}
 	
+	mutex_unlock(&scull_lock);
 	return 0;
 }
 #else
@@ -104,6 +115,10 @@ static int scull_ioctl(struct inode *inode, struct file *filp, unsigned int cmd,
 	scull_t *scull_data = filp->private_data;
 	
 	printk("Going in ioct\n");
+	
+	if (mutex_lock_interruptible(&scull_lock))
+        return -ERESTARTSYS;
+    
 	switch(cmd)
 	{
 		case SCULL_WRITE_DATA:
@@ -113,6 +128,7 @@ static int scull_ioctl(struct inode *inode, struct file *filp, unsigned int cmd,
 			if (result)
 			{
 				printk("Unable to copy from user\n");
+				mutex_unlock(&scull_lock);
 				return -1;
 			}
 			printk("Writing data to: %u\n", temp);
@@ -125,6 +141,7 @@ static int scull_ioctl(struct inode *inode, struct file *filp, unsigned int cmd,
 			if (result)
 			{
 				printk("Unable to copy to user\n");
+				mutex_unlock(&scull_lock);
 				return -1;
 			}
 			printk("Reading data to: %u\n", scull_data->data);
@@ -135,6 +152,7 @@ static int scull_ioctl(struct inode *inode, struct file *filp, unsigned int cmd,
 		}
 	}
 	
+	mutex_unlock(&scull_lock);
 	return 0;
 }
 #endif
@@ -145,7 +163,13 @@ static int scull_read_proc(char *buf, char **start, off_t offset, int count, int
 {
 	int len=0;
 	
+	if (mutex_lock_interruptible(&scull_lock))
+        return -ERESTARTSYS;
+
 	len += sprintf(buf+len, "Device major: %d data: %u\n", scull.major, scull.data);
+	
+	mutex_unlock(&scull_lock);
+	
 	*eof = 1;
 	return len;
 }
