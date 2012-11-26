@@ -1,5 +1,5 @@
-#ifndef __IOCTL_MAGIC_H_
-#define __IOCTL_MAGIC_H_
+#ifndef __SCULL_MAGIC_H_
+#define __SCULL_MAGIC_H_
 
 #ifdef __KERNEL__
 #include <linux/ioctl.h>
