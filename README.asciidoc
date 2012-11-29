@@ -1,8 +1,8 @@
 Scull Linux Character Device Driver
-======================
-Varun Madahar
+------------------------------------
+Author: Varun Madahar
 
 Introduction
-~~~~~~~~
+~~~~~~~~~~~~~
 This is a basic scull driver straight out of a Linux Device Drivers (3rd edition) book.  I have created
 this scull driver to use as a base for making any future char device drivers.
